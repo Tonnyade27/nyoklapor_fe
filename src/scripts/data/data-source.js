@@ -25,21 +25,29 @@ class NyokLaporAPI {
     };
 
     const response = await this.fetchData(url, options);
-    return response.profile;
+
+    // Provide a default empty object if response.profile is null or undefined
+    const profile = response?.profile || {};
+    return profile;
   }
 
   static async fetchData(url, options = {}) {
-    return fetch(url, options)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => data)
-      .catch((error) => {
-        throw new Error(error);
-      });
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        throw new Error('Response is not JSON');
+      }
+    } catch (error) {
+      // Handle the error without throwing it
+      console.error('Error caught:', error.message);
+      return null; // Or handle it another way
+    }
   }
 
   // Fungsi untuk catat waktu terakhir aktivitas dan waktu kadaluwarsa token
